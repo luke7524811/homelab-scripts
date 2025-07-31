@@ -6,7 +6,11 @@ metadata:
 spec:
   entryPoints: [web]
   routes:
-    - match: Host(`audiobookshelf.rahl.cc`) || Host(`audiobookshelf.fractal-financial.com`)
+    - match: |
+        Host(`audiobookshelf.rahl.cc`) ||
+        Host(`audiobookshelf.fractal-financial.com`) ||
+        Host(`abs.rahl.cc`) ||
+        Host(`abs.fractal-financial.com`)
       kind: Rule
       services:
         - name: audiobookshelf
