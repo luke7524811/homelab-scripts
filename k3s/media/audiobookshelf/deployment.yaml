@@ -10,7 +10,7 @@ spec:
     matchLabels: {app: audiobookshelf}
   template:
     metadata:
-      labels: {app: audiobookshelf}
+      labels: {app: audiobookshelf, tier: media}
     spec:
       containers:
         - name: abs
