@@ -1,0 +1,10 @@
+
+tunnel: bb4c24f4-7fff-46b5-9548-517a288415ed
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: jellyfin.rahl.cc
+    service: http://traefik.traefik.svc.cluster.local:80
+  - hostname: sabnzbd.rahl.cc
+    service: http://sabnzbd.media.svc.cluster.local:8080
+  - service: http_status:404

@@ -13,26 +13,33 @@ spec:
       labels:
         app: cloudflared
     spec:
+      serviceAccountName: cloudflared
       containers:
-      - name: cloudflared
-        image: cloudflare/cloudflared:latest
-        args:
-          - tunnel
-          - --no-autoupdate
-          - run
-          - --token
-          - $(TUNNEL_TOKEN)
-        env:
-          - name: TUNNEL_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: cloudflared-credentials
-                key: credentials.json
-        volumeMounts:
-          - name: cloudflared-creds
-            mountPath: /etc/cloudflared
-            readOnly: true
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - run
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/cloudflared/config.yaml
+              subPath: config.yaml
+            - name: credentials-volume
+              mountPath: /etc/cloudflared/credentials.json
+              subPath: credentials.json
+            - name: credentials-volume
+              mountPath: /etc/cloudflared/cert.pem
+              subPath: cert.pem
       volumes:
-        - name: cloudflared-creds
+        - name: config-volume
+          configMap:
+            name: cloudflared-config
+        - name: credentials-volume
           secret:
             secretName: cloudflared-credentials
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloudflared
+  namespace: cloudflare-tunnel
