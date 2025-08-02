@@ -1,0 +1,69 @@
+🧠 Home Lab Snapshot – 2025-08-02
+
+## ☁️ Cluster Overview
+
+- **Kubernetes (K3s)** running on `ubuntu-node-01` (`192.168.86.77`)
+- **Single-node cluster** for now, with plans to scale.
+- **Git repo** used: https://github.com/luke7524811/homelab-scripts/tree/main/k3s-arr
+
+## 📦 Running Apps (as of this snapshot)
+| App            | Subdomain(s)                          | Status   | Namespace | Notes                                |
+|----------------|---------------------------------------|----------|------------|----------------------------------------|
+| Audiobookshelf | `abs.rahl.cc`, `abs.fractal-financial.com` | ✅ Running | `default` | Swarm replacement complete             |
+| SABnzbd        | `sab.rahl.cc`                         | ✅ Running | `media`   |                                        |
+| Sonarr         | `sonarr.rahl.cc`                      | ✅ Running | `default` |                                        |
+| Radarr         | `radarr.rahl.cc`                      | ✅ Running | `media`   |                                        |
+| Overseerr      | `overseerr.rahl.cc`                   | ✅ Running | `default` |                                        |
+| Vaultwarden    | `vault.rahl.cc`                       | ✅ Running | `default` |                                        |
+| Metube         | `metube.rahl.cc`                      | 🔴 ImagePullBackOff | `default` | Check image/pull issues                |
+| Huntarr        | `huntarr.rahl.cc`                     | 🔴 CrashLoopBackOff | `default` |                                        |
+| ActualBudget   | `actual.rahl.cc`, `actual.fractal-financial.com` | ✅ Running | `default` |                                        |
+| Obsidian       | `obsidian.rahl.cc`                    | ✅ Running | `default` | Moved from Swarm                       |
+| Jellyfin       | `jellyfin.rahl.cc`                    | ✅ Running | `media`   |                                        |
+
+## 🔐 Ingress and Networking
+
+- **Traefik** running in `traefik` namespace, handles ingress with Cloudflare
+- **Cloudflared Tunnel** (in `cloudflare-tunnel` namespace)
+  - Config map: `cloudflared-config`
+  - Config path: `/etc/cloudflared/config.yaml`
+  - All wildcard routes forward to: `http://traefik.traefik.svc.cluster.local:80`
+- TLS: Using Let's Encrypt via `traefik.ingress.kubernetes.io/router.tls.certresolver: cloudflare`
+- IngressClass: `traefik`
+
+## 📂 Directory Structure (on GitHub)
+
+All manifests are in:
+
+📁 [`~/homelab-scripts/k3s-arr`](https://github.com/luke7524811/homelab-scripts/tree/main/k3s-arr)
+
+Each app has its own subfolder and manifest:
+
+- `audiobookshelf/audiobookshelf.yaml`
+- `sonarr/sonarr.yaml`
+- `radarr/radarr.yaml`
+- `overseerr/overseerr.yaml`
+- `vaultwarden/vaultwarden.yaml`
+- `metube/metube.yaml`
+- `huntarr/huntarr.yaml`
+- `actualbudget/actualbudget.yaml`
+- `obsidian/obsidian.yaml`
+
+Each includes:
+- Deployment
+- Service
+- Ingress
+- PersistentVolumeClaim (if needed)
+
+## ✅ Completed Tasks
+
+- Moved all major media services from Docker Swarm to K3s
+- Resolved Cloudflare redirect loop by ensuring HTTP is used inside the tunnel
+- Switched to structured per-app manifests
+- Confirmed wildcard routing works from tunnel to Traefik
+
+## 🛠️ Remaining Issues
+
+- `huntarr` crashing repeatedly
+- `metube` cannot pull image
+- Validate all Ingresses are routed and TLS-enabled correctly
