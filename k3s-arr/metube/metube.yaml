@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metube
+  labels:
+    app: metube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metube
+  template:
+    metadata:
+      labels:
+        app: metube
+    spec:
+      containers:
+        - name: metube
+          image: aleksisbatman/metube:latest
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - name: downloads
+              mountPath: /downloads
+      volumes:
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: metube-downloads
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metube
+spec:
+  selector:
+    app: metube
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: metube
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: cloudflare
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: metube.rahl.cc
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: metube
+                port:
+                  number: 8081
+    - host: metube.fractal-financial.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: metube
+                port:
+                  number: 8081
+  tls:
+    - hosts:
+        - metube.rahl.cc
+        - metube.fractal-financial.com
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metube-downloads
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

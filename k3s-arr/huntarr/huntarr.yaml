@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: huntarr
+  labels:
+    app: huntarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: huntarr
+  template:
+    metadata:
+      labels:
+        app: huntarr
+    spec:
+      containers:
+        - name: huntarr
+          image: huntarr/huntarr:latest
+          ports:
+            - containerPort: 9705
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: huntarr-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: huntarr
+spec:
+  selector:
+    app: huntarr
+  ports:
+    - protocol: TCP
+      port: 9705
+      targetPort: 9705
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: huntarr
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: cloudflare
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: huntarr.rahl.cc
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: huntarr
+                port:
+                  number: 9705
+    - host: huntarr.fractal-financial.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: huntarr
+                port:
+                  number: 9705
+  tls:
+    - hosts:
+        - huntarr.rahl.cc
+        - huntarr.fractal-financial.com
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: huntarr-config
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

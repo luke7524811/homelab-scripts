@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obsidian
+  labels:
+    app: obsidian
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: obsidian
+  template:
+    metadata:
+      labels:
+        app: obsidian
+    spec:
+      containers:
+        - name: obsidian
+          image: lscr.io/linuxserver/obsidian:latest
+          ports:
+            - containerPort: 8443
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/Chicago"
+          volumeMounts:
+            - name: obsidian-data
+              mountPath: /config
+      volumes:
+        - name: obsidian-data
+          persistentVolumeClaim:
+            claimName: obsidian-data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: obsidian
+spec:
+  selector:
+    app: obsidian
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 8443
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: obsidian
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: cloudflare
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: obsidian.rahl.cc
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: obsidian
+                port:
+                  number: 443
+    - host: obsidian.fractal-financial.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: obsidian
+                port:
+                  number: 443
+  tls:
+    - hosts:
+        - obsidian.rahl.cc
+        - obsidian.fractal-financial.com
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: obsidian-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
