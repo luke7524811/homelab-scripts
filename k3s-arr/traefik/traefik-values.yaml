@@ -1,38 +1,38 @@
 additionalArguments:
-  - --api=true
-  - --api.dashboard=true
-  - --api.insecure=true
-  - --accesslog=true
-  - --accesslog.format=json
-  - --log.level=DEBUG
+  - "--entryPoints.web.address=:80"
+  - "--entryPoints.websecure.address=:443"
+  - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+  - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+  - "--certificatesresolvers.cloudflare.acme.email=your@email.com"
+  - "--certificatesresolvers.cloudflare.acme.storage=/data/acme.json"
+  - "--providers.kubernetescrd"
+  - "--providers.kubernetesingress"
+  - "--api.dashboard=true"
+  - "--log.level=DEBUG"
+
+env:
+  - name: CF_API_EMAIL
+    value: your@email.com
+  - name: CF_DNS_API_TOKEN
+    value: your_cloudflare_api_token
 
 ports:
-  traefik:
-    port: 9000
-    expose:
-      default: true
-    exposedPort: 9000
-    protocol: TCP
-
   web:
-    port: 8000
-    expose:
-      default: true
-    exposedPort: 80
-    protocol: TCP
-
+    port: 80
+    expose: true
   websecure:
-    port: 8443
-    expose:
-      default: true
-    exposedPort: 443
-    protocol: TCP
+    port: 443
+    expose: true
 
 service:
-  enabled: true
   type: LoadBalancer
-  loadBalancerIP: 192.168.86.240
 
-ingressClass:
-  enabled: true
-  isDefaultClass: true
+ingressRoute:
+  dashboard:
+    enabled: true
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
