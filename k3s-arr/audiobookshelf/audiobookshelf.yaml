@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audiobookshelf
+  labels:
+    app: audiobookshelf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audiobookshelf
+  template:
+    metadata:
+      labels:
+        app: audiobookshelf
+    spec:
+      containers:
+        - name: audiobookshelf
+          image: ghcr.io/advplyr/audiobookshelf:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: America/Denver
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: audiobooks
+              mountPath: /audiobooks
+            - name: metadata
+              mountPath: /metadata
+      volumes:
+        - name: config
+          hostPath:
+            path: /mnt/gluster/appdata/audiobookshelf
+        - name: audiobooks
+          hostPath:
+            path: /mnt/gluster/media/audiobooks
+        - name: metadata
+          hostPath:
+            path: /mnt/gluster/media/metadata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audiobookshelf
+spec:
+  selector:
+    app: audiobookshelf
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: audiobookshelf
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`audiobookshelf.rahl.cc`) || Host(`audiobookshelf.fractal-financial.com`) || Host(`abs.rahl.cc`) || Host(`abs.fractal-financial.com`)
+      kind: Rule
+      services:
+        - name: audiobookshelf
+          port: 80
+          namespace: default
+  tls:
+    certResolver: letsencrypt
