@@ -16,9 +16,11 @@ spec:
       serviceAccountName: cloudflared
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:latest
+          image: cloudflare/cloudflared:2023.10.0
           args:
             - tunnel
+            - --config
+            - /etc/cloudflared/config.yaml
             - run
           volumeMounts:
             - name: config-volume
@@ -27,9 +29,6 @@ spec:
             - name: credentials-volume
               mountPath: /etc/cloudflared/credentials.json
               subPath: credentials.json
-            - name: credentials-volume
-              mountPath: /etc/cloudflared/cert.pem
-              subPath: cert.pem
       volumes:
         - name: config-volume
           configMap:

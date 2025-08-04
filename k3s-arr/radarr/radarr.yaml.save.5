@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,7 +35,7 @@ spec:
               mountPath: /movies
             - name: downloads
               mountPath: /downloads
-      volumes:  # ✅ This is now correctly outside 'containers'
+      volumes:
         - name: config
           hostPath:
             path: /mnt/gluster/appdata/radarr
@@ -44,7 +45,9 @@ spec:
         - name: downloads
           hostPath:
             path: /mnt/gluster/media/media_holder/movies
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
