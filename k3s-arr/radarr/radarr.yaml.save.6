@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,7 +6,6 @@ metadata:
   namespace: media
   labels:
     app.kubernetes.io/name: radarr
-    app: radarr
 spec:
   replicas: 1
   selector:
@@ -15,13 +15,10 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: radarr
-        app: radarr
     spec:
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr:latest
-          ports:
-            - containerPort: 7878
           env:
             - name: PUID
               value: "1000"
@@ -29,6 +26,8 @@ spec:
               value: "1000"
             - name: TZ
               value: "America/Denver"
+          ports:
+            - containerPort: 7878
           volumeMounts:
             - name: config
               mountPath: /config
@@ -36,13 +35,7 @@ spec:
               mountPath: /movies
             - name: downloads
               mountPath: /downloads
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 7878
-            initialDelaySeconds: 10
-            periodSeconds: 15
-      volumes:
+      volumes:  # ✅ This is now correctly outside 'containers'
         - name: config
           hostPath:
             path: /mnt/gluster/appdata/radarr
@@ -52,7 +45,6 @@ spec:
         - name: downloads
           hostPath:
             path: /mnt/gluster/media/media_holder/movies
-
 ---
 apiVersion: v1
 kind: Service
@@ -63,7 +55,7 @@ spec:
   selector:
     app.kubernetes.io/name: radarr
   ports:
-    - name: http
+    - protocol: TCP
       port: 7878
       targetPort: 7878
   type: ClusterIP

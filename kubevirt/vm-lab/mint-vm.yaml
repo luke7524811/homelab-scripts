@@ -1,0 +1,54 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: linuxmint-vm
+  namespace: vm-lab
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: linuxmint-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cdromiso
+              cdrom:
+                bus: sata
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: rootdisk
+          persistentVolumeClaim:
+            claimName: mint-vm-pvc
+        - name: cdromiso
+          hostDisk:
+            path: /mnt/gluster/media/vms/linuxmint.iso
+            type: Disk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: mint
+                  ssh-authorized-keys: []
+              chpasswd:
+                list: |
+                  mint:mint
+                expire: False
+      networks:
+        - name: default
+          pod: {}
