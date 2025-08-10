@@ -1,0 +1,95 @@
+apiVersion: v1
+data:
+  config.yaml: |
+    # Replace with your real Tunnel ID (the one that matches your credentials.json)
+    tunnel: bb4c24f4-7fff-46b5-9548-517a288415ed
+    credentials-file: /etc/cloudflared/credentials.json
+
+    # One rule per hostname -> in-cluster Service (ClusterIP)
+    # NOTE: Ports below are the common defaults. If your Service uses a different port,
+    # we’ll adjust after a quick check.
+    ingress:
+      # ===== rahl.cc =====
+      - hostname: abs.rahl.cc              # Audiobookshelf (alias 1)
+        service: http://audiobookshelf.media.svc.cluster.local:80
+      - hostname: audiobookshelf.rahl.cc   # Audiobookshelf (alias 2)
+        service: http://audiobookshelf.media.svc.cluster.local:80
+      - hostname: vault.rahl.cc            # Vaultwarden
+        service: http://vaultwarden.default.svc.cluster.local:80
+      - hostname: actual.rahl.cc           # Actual Budget
+        service: http://actualbudget.default.svc.cluster.local:5006
+      - hostname: sonarr.rahl.cc
+        service: http://sonarr.media.svc.cluster.local:8989
+      - hostname: radarr.rahl.cc
+        service: http://radarr.media.svc.cluster.local:7878
+      - hostname: prowlarr.rahl.cc
+        service: http://prowlarr.media.svc.cluster.local:9696
+      - hostname: huntarr.rahl.cc
+        service: http://huntarr.default.svc.cluster.local:8000
+      - hostname: overseerr.rahl.cc
+        service: http://overseerr.default.svc.cluster.local:5055
+      - hostname: sabnzbd.rahl.cc
+        service: http://sabnzbd.media.svc.cluster.local:8080
+      - hostname: obsidian.rahl.cc
+        service: http://obsidian.media.svc.cluster.local:3000
+      - hostname: metube.rahl.cc
+        service: http://metube.default.svc.cluster.local:8081
+      - hostname: dumbassets.rahl.cc
+        service: http://dumbassets.media.svc.cluster.local:8080
+      - hostname: remote.rahl.cc           # Apache Guacamole
+        service: http://guacamole.guacamole.svc.cluster.local:8080
+      - hostname: jellyfin.rahl.cc
+        service: http://jellyfin.media.svc.cluster.local:8096
+        originRequest:
+          connectTimeout: 30s
+          noTLSVerify: true
+          http2Origin: true
+
+      # ===== fractal-financial.com =====
+      - hostname: abs.fractal-financial.com
+        service: http://audiobookshelf.media.svc.cluster.local:80
+      - hostname: audiobookshelf.fractal-financial.com
+        service: http://audiobookshelf.media.svc.cluster.local:80
+      - hostname: vault.fractal-financial.com
+        service: http://vaultwarden.default.svc.cluster.local:80
+      - hostname: actual.fractal-financial.com
+        service: http://actualbudget.default.svc.cluster.local:5006
+      - hostname: sonarr.fractal-financial.com
+        service: http://sonarr.media.svc.cluster.local:8989
+      - hostname: radarr.fractal-financial.com
+        service: http://radarr.media.svc.cluster.local:7878
+      - hostname: prowlarr.fractal-financial.com
+        service: http://prowlarr.media.svc.cluster.local:9696
+      - hostname: huntarr.fractal-financial.com
+        service: http://huntarr.default.svc.cluster.local:8000
+      - hostname: overseerr.fractal-financial.com
+        service: http://overseerr.default.svc.cluster.local:5055
+      - hostname: sabnzbd.fractal-financial.com
+        service: http://sabnzbd.media.svc.cluster.local:8080
+      - hostname: obsidian.fractal-financial.com
+        service: http://obsidian.media.svc.cluster.local:3000
+      - hostname: metube.fractal-financial.com
+        service: http://metube.default.svc.cluster.local:8081
+      - hostname: dumbassets.fractal-financial.com
+        service: http://dumbassets.media.svc.cluster.local:8080
+      - hostname: remote.fractal-financial.com
+        service: http://guacamole.guacamole.svc.cluster.local:8080
+      - hostname: jellyfin.fractal-financial.com
+        service: http://jellyfin.media.svc.cluster.local:8096
+        originRequest:
+          connectTimeout: 30s
+          noTLSVerify: true
+          http2Origin: true
+
+      # Catch-all (404) for anything not matched above
+      - service: http_status:404
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"config.yaml":"# Replace with your real Tunnel ID (the one that matches your credentials.json)\ntunnel: bb4c24f4-7fff-46b5-9548-517a288415ed\ncredentials-file: /etc/cloudflared/credentials.json\n\n# One rule per hostname -\u003e in-cluster Service (ClusterIP)\n# NOTE: Ports below are the common defaults. If your Service uses a different port,\n# we’ll adjust after a quick check.\ningress:\n  # ===== rahl.cc =====\n  - hostname: abs.rahl.cc              # Audiobookshelf (alias 1)\n    service: http://audiobookshelf.media.svc.cluster.local:80\n  - hostname: audiobookshelf.rahl.cc   # Audiobookshelf (alias 2)\n    service: http://audiobookshelf.media.svc.cluster.local:80\n  - hostname: vault.rahl.cc            # Vaultwarden\n    service: http://vaultwarden.default.svc.cluster.local:80\n  - hostname: actual.rahl.cc           # Actual Budget\n    service: http://actualbudget.default.svc.cluster.local:5006\n  - hostname: sonarr.rahl.cc\n    service: http://sonarr.default.svc.cluster.local:8989\n  - hostname: radarr.rahl.cc\n    service: http://radarr.media.svc.cluster.local:7878\n  - hostname: prowlarr.rahl.cc\n    service: http://prowlarr.media.svc.cluster.local:9696\n  - hostname: huntarr.rahl.cc\n    service: http://huntarr.default.svc.cluster.local:8000\n  - hostname: overseerr.rahl.cc\n    service: http://overseerr.default.svc.cluster.local:5055\n  - hostname: sabnzbd.rahl.cc\n    service: http://sabnzbd.media.svc.cluster.local:8080\n  - hostname: obsidian.rahl.cc\n    service: http://obsidian.media.svc.cluster.local:3000\n  - hostname: metube.rahl.cc\n    service: http://metube.default.svc.cluster.local:8081\n  - hostname: dumbassets.rahl.cc\n    service: http://dumbassets.media.svc.cluster.local:8080\n  - hostname: remote.rahl.cc           # Apache Guacamole\n    service: http://guacamole.guacamole.svc.cluster.local:8080\n  - hostname: jellyfin.rahl.cc\n    service: http://jellyfin.media.svc.cluster.local:8096\n  originRequest:\n    connectTimeout: 30s\n    noTLSVerify: true\n    http2Origin: true\n\n  # ===== fractal-financial.com =====\n  - hostname: abs.fractal-financial.com\n    service: http://audiobookshelf.media.svc.cluster.local:80\n  - hostname: audiobookshelf.fractal-financial.com\n    service: http://audiobookshelf.media.svc.cluster.local:80\n  - hostname: vault.fractal-financial.com\n    service: http://vaultwarden.default.svc.cluster.local:80\n  - hostname: actual.fractal-financial.com\n    service: http://actualbudget.default.svc.cluster.local:5006\n  - hostname: sonarr.fractal-financial.com\n    service: http://sonarr.default.svc.cluster.local:8989\n  - hostname: radarr.fractal-financial.com\n    service: http://radarr.media.svc.cluster.local:7878\n  - hostname: prowlarr.fractal-financial.com\n    service: http://prowlarr.media.svc.cluster.local:9696\n  - hostname: huntarr.fractal-financial.com\n    service: http://huntarr.default.svc.cluster.local:8000\n  - hostname: overseerr.fractal-financial.com\n    service: http://overseerr.default.svc.cluster.local:5055\n  - hostname: sabnzbd.fractal-financial.com\n    service: http://sabnzbd.media.svc.cluster.local:8080\n  - hostname: obsidian.fractal-financial.com\n    service: http://obsidian.media.svc.cluster.local:3000\n  - hostname: metube.fractal-financial.com\n    service: http://metube.default.svc.cluster.local:8081\n  - hostname: dumbassets.fractal-financial.com\n    service: http://dumbassets.media.svc.cluster.local:8080\n  - hostname: remote.fractal-financial.com\n    service: http://guacamole.guacamole.svc.cluster.local:8080\n  - hostname: jellyfin.fractal-financial.com\n    service: http://jellyfin.media.svc.cluster.local:8096\n  originRequest:\n    connectTimeout: 30s\n    noTLSVerify: true\n    http2Origin: true\n\n  # Catch-all (404) for anything not matched above\n  - service: http_status:404\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":"2025-08-02T20:44:39Z","name":"cloudflared-config","namespace":"cloudflare-tunnel","resourceVersion":"917950","uid":"e63304d4-2629-4cc4-b4e2-0ed3e0962275"}}
+  creationTimestamp: "2025-08-02T20:44:39Z"
+  name: cloudflared-config
+  namespace: cloudflare-tunnel
+  resourceVersion: "920399"
+  uid: e63304d4-2629-4cc4-b4e2-0ed3e0962275

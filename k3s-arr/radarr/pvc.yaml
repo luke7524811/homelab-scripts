@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: radarr-config-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-movies-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Ti
+  volumeName: radarr-movies-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-downloads-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Ti
+  volumeName: radarr-downloads-pv

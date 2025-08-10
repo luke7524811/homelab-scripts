@@ -4,24 +4,24 @@ metadata:
   name: radarr
   namespace: media
   labels:
-    app.kubernetes.io/name: radarr
     app: radarr
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: radarr
+      app: radarr
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: radarr
         app: radarr
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr:latest
-          ports:
-            - containerPort: 7878
           env:
             - name: PUID
               value: "1000"
@@ -29,6 +29,8 @@ spec:
               value: "1000"
             - name: TZ
               value: "America/Denver"
+          ports:
+            - containerPort: 7878
           volumeMounts:
             - name: config
               mountPath: /config
@@ -38,32 +40,30 @@ spec:
               mountPath: /downloads
           readinessProbe:
             httpGet:
-              path: /
+              path: /login
               port: 7878
-            initialDelaySeconds: 10
-            periodSeconds: 15
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: 7878
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
       volumes:
         - name: config
-          hostPath:
-            path: /mnt/gluster/appdata/radarr
+          persistentVolumeClaim:
+            claimName: radarr-config-pvc
         - name: movies
-          hostPath:
-            path: /mnt/gluster/media/movies
+          persistentVolumeClaim:
+            claimName: radarr-movies-pvc
         - name: downloads
-          hostPath:
-            path: /mnt/gluster/media/media_holder/movies
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: radarr
-  namespace: media
-spec:
-  selector:
-    app.kubernetes.io/name: radarr
-  ports:
-    - name: http
-      port: 7878
-      targetPort: 7878
-  type: ClusterIP
+          persistentVolumeClaim:
+            claimName: radarr-downloads-pvc

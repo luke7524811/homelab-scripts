@@ -24,3 +24,16 @@ bash
 Copy
 Edit
 kubectl apply -f cloudflared.yaml
+
+
+# cloudflared-config.yaml
+Cloudflare Tunnel routes public hostnames → K8s Services directly (no Traefik).
+Example:
+hostname: sabnzbd.rahl.cc
+service: http://sabnzbd.media.svc.cluster.local:8080
+
+yaml
+Copy
+Edit
+
+Apply & restart:

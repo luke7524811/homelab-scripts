@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: cloudflare-tunnel
+data:
+  config.yaml: |
+    tunnel: <YOUR_TUNNEL_ID>
+    credentials-file: /etc/cloudflared/credentials.json
+
+    ingress:
+      - hostname: sabnzbd.rahl.cc
+        service: http://sabnzbd.media.svc.cluster.local:8080
+      # keep your other hostnames here (radarr, sonarr, overseerr, jellyfin, etc.)
+      - service: http_status:404

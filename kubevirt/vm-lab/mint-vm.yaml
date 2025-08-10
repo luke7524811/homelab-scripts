@@ -4,7 +4,7 @@ metadata:
   name: linuxmint-vm
   namespace: vm-lab
 spec:
-  running: true
+  runStrategy: Always
   template:
     metadata:
       labels:
@@ -30,25 +30,22 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - port: 5900
+      networks:
+        - name: default
+          pod: {}
       volumes:
         - name: rootdisk
           persistentVolumeClaim:
             claimName: mint-vm-pvc
         - name: cdromiso
-          hostDisk:
-            path: /mnt/gluster/media/vms/linuxmint.iso
-            type: Disk
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo
         - name: cloudinitdisk
           cloudInitNoCloud:
             userData: |
               #cloud-config
-              users:
-                - name: mint
-                  ssh-authorized-keys: []
-              chpasswd:
-                list: |
-                  mint:mint
-                expire: False
-      networks:
-        - name: default
-          pod: {}
+              password: mint
+              chpasswd: { expire: False }
+              ssh_pwauth: True
