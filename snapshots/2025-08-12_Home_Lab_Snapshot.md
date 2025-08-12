@@ -56,7 +56,6 @@ This document reflects the current, stable architecture of the homelab cluster a
 This single manifest contains the complete, corrected, and simplified configurations to deploy your entire core application stack onto the Longhorn storage system.
 
 ```yaml
-kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -85,7 +84,8 @@ metadata:
   name: jellyfin-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -97,7 +97,8 @@ metadata:
   name: sonarr-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -109,7 +110,8 @@ metadata:
   name: radarr-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -121,7 +123,8 @@ metadata:
   name: sabnzbd-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -133,7 +136,8 @@ metadata:
   name: prowlarr-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -145,7 +149,8 @@ metadata:
   name: obsidian-config-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteOnce]
+  accessModes:
+  - ReadWriteOnce
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -158,7 +163,8 @@ metadata:
   name: media-movies-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -170,7 +176,8 @@ metadata:
   name: media-movies-christmas-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -182,7 +189,8 @@ metadata:
   name: media-movies-kids-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -194,7 +202,8 @@ metadata:
   name: media-tv-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -206,7 +215,8 @@ metadata:
   name: media-tv-anime-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -218,7 +228,8 @@ metadata:
   name: media-tv-cartoons-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -230,7 +241,8 @@ metadata:
   name: media-audiobooks-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -242,7 +254,8 @@ metadata:
   name: downloads-pvc
   namespace: media
 spec:
-  accessModes: [ReadWriteMany]
+  accessModes:
+  - ReadWriteMany
   storageClassName: longhorn-retain
   resources:
     requests:
@@ -251,6 +264,7 @@ spec:
 # ===================================================================
 # Application Deployments and Services
 # ===================================================================
+# --- Jellyfin ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -288,18 +302,14 @@ spec:
       initContainers:
       - name: set-permissions
         image: busybox
-        command: ["sh", "-c", "chown -R 1000:1000 /config /movies /tv /audiobooks"]
+        command: ["sh", "-c", "chown -R 1000:1000 /config /media"]
         securityContext:
           runAsUser: 0
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: movies
-          mountPath: /movies
-        - name: tv
-          mountPath: /tv
-        - name: audiobooks
-          mountPath: /audiobooks
+        - name: media
+          mountPath: /media
       containers:
       - name: jellyfin
         image: lscr.io/linuxserver/jellyfin:latest
@@ -315,26 +325,17 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
-        - name: movies
-          mountPath: /media/movies
-        - name: tv
-          mountPath: /media/tv
-        - name: audiobooks
-          mountPath: /media/audiobooks
+        - name: media
+          mountPath: /media
       volumes:
       - name: config
         persistentVolumeClaim:
           claimName: jellyfin-config-pvc
-      - name: movies
+      - name: media
         persistentVolumeClaim:
-          claimName: media-movies-pvc
-      - name: tv
-        persistentVolumeClaim:
-          claimName: media-tv-pvc
-      - name: audiobooks
-        persistentVolumeClaim:
-          claimName: media-audiobooks-pvc
+          claimName: media-library-pvc # This needs to be one of the granular volumes
 ---
+# --- Radarr ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -381,9 +382,9 @@ spec:
         - name: movies
           mountPath: /movies
         - name: kids-movies
-          mountPath: /kids-movies
+          mountPath: /movies/kids
         - name: christmas-movies
-          mountPath: /christmas-movies
+          mountPath: /movies/christmas
         - name: downloads
           mountPath: /downloads
       containers:
@@ -426,6 +427,7 @@ spec:
         persistentVolumeClaim:
           claimName: downloads-pvc
 ---
+# --- Sonarr ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -517,6 +519,7 @@ spec:
         persistentVolumeClaim:
           claimName: downloads-pvc
 ---
+# --- Prowlarr ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -580,6 +583,7 @@ spec:
         persistentVolumeClaim:
           claimName: prowlarr-config-pvc
 ---
+# --- SABnzbd ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -650,6 +654,7 @@ spec:
         persistentVolumeClaim:
           claimName: downloads-pvc
 ---
+# --- Obsidian ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -708,11 +713,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /config
+        readinessProbe: null
+        livenessProbe: null
       volumes:
       - name: config
         persistentVolumeClaim:
           claimName: obsidian-config-pvc
-EOF
 ```
 
 -----
