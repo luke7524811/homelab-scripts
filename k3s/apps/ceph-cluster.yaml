@@ -7,6 +7,8 @@ metadata:
 spec:
   cephVersion:
     image: quay.io/ceph/ceph:v19.2.0
+    # --- ADD THIS LINE ---
+    allowUnsupported: true
   dataDirHostPath: /var/lib/rook
   mon:
     count: 1
@@ -16,8 +18,6 @@ spec:
   dashboard:
     enabled: true
     ssl: true
-
-  # --- THIS ENTIRE PLACEMENT SECTION IS NEW ---
   placement:
     all:
       tolerations:
@@ -25,7 +25,6 @@ spec:
         operator: "Equal"
         value: "true"
         effect: "NoSchedule"
-
   storage:
     useAllNodes: false
     nodes:
