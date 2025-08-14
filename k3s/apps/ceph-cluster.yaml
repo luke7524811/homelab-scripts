@@ -1,0 +1,29 @@
+# k3s/apps/ceph-cluster.yaml
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  cephVersion:
+    image: quay.io/ceph/ceph:v19.2.0
+  dataDirHostPath: /var/lib/rook
+  mon:
+    count: 1 # In a 2-node cluster, only 1 monitor is recommended
+    allowMultiplePerNode: true
+  mgr:
+    count: 1
+  dashboard:
+    enabled: true
+    ssl: true
+  storage:
+    useAllNodes: false
+    nodes:
+    - name: "gluster-node-1"
+      devices:
+      # IMPORTANT: Replace these with your actual disk names.
+      # You can find them by running 'lsblk' on gluster-node-1.
+      - name: "sdb"
+      - name: "sdc"
+      - name: "sdd"
+      - name: "sde"

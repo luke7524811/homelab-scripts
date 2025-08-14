@@ -1,0 +1,75 @@
+# k3s/apps/cloudflare-tunnel.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudflare-tunnel
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflared-credentials
+  namespace: cloudflare-tunnel
+stringData:
+  # IMPORTANT: Make sure your credentials.json content is correct here
+  credentials.json: |
+    {"AccountTag":"5fc341cf49084d820aa1c0d7a433ca49","TunnelID":"7uWjolu1kRJLhzcPZ0xumCIaaWHG2CG/7l9Lk06GC+s=","TunnelSecret":"c8d46551-f5f3-4d4d-a764d-a76a-a679df82c934"}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: cloudflare-tunnel
+data:
+  config.yaml: |
+    # IMPORTANT: Make sure your TunnelID is correct here
+    tunnel: 7uWjolu1kRJLhzcPZ0xumCIaaWHG2CG/7l9Lk06GC+s=
+    credentials-file: /etc/cloudflared/credentials.json
+    ingress:
+      - hostname: argocd.rahl.cc
+        service: https://argocd-server.argocd.svc.cluster.local:443
+        originRequest:
+          noTLSVerify: true
+      - hostname: ceph.rahl.cc
+        service: https://rook-ceph-mgr-dashboard-secure.rook-ceph.svc.cluster.local:8443
+        originRequest:
+          noTLSVerify: true
+      # This last rule is a catch-all
+      - service: http_status:404
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: cloudflare-tunnel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --config
+            - /etc/cloudflared/config.yaml
+            - run
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/cloudflared/config.yaml
+              subPath: config.yaml
+            - name: credentials-volume
+              mountPath: /etc/cloudflared/credentials.json
+              subPath: credentials.json
+      volumes:
+        - name: config-volume
+          configMap:
+            name: cloudflared-config
+        - name: credentials-volume
+          secret:
+            secretName: cloudflared-credentials
