@@ -9,20 +9,28 @@ spec:
     image: quay.io/ceph/ceph:v19.2.0
   dataDirHostPath: /var/lib/rook
   mon:
-    count: 1 # In a 2-node cluster, only 1 monitor is recommended
+    count: 1
     allowMultiplePerNode: true
   mgr:
     count: 1
   dashboard:
     enabled: true
     ssl: true
+
+  # --- THIS ENTIRE PLACEMENT SECTION IS NEW ---
+  placement:
+    all:
+      tolerations:
+      - key: "ceph-storage"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
   storage:
     useAllNodes: false
     nodes:
     - name: "gluster-node-1"
       devices:
-      # IMPORTANT: Replace these with your actual disk names.
-      # You can find them by running 'lsblk' on gluster-node-1.
       - name: "sdb"
       - name: "sdc"
       - name: "sdd"
