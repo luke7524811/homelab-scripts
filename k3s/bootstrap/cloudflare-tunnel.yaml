@@ -16,7 +16,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 stringData:
-  token: "YOUR_CORRECT_TUNNEL_TOKEN_HERE"
+  token: "eyJhIjoiNWZjMzQxY2Y0OTA4NGQ4MjBhYTFjMGQ3YTQzM2NhNDkiLCJ0IjoiYmJlOWM4NDYtMDM4YS00NTRjLWJmNTctOWJiYTQwZmEzNWM5IiwicyI6Ik1ETTROekZpT1dVdE5XTTBNUzAwT0RRd0xUbGhOamN0TVRobE56QmtaVE0yTURjNSJ9"
 ---
 apiVersion: v1
 kind: ConfigMap
