@@ -1,0 +1,19 @@
+# k3s/argocd/bootstrap-tunnel-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap-tunnel
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/luke7524811/homelab-scripts.git'
+    path: k3s/bootstrap
+    targetRevision: HEAD
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
