@@ -24,7 +24,7 @@ data:
   config.yaml: |
     ingress:
       - hostname: argocd.rahl.cc
-        service: https://argocd-server.argocd.svc.cluster.local:443
+        service: http://argocd-server.argocd.svc.cluster.local:80
         originRequest:
           noTLSVerify: true
       - hostname: ceph.rahl.cc
