@@ -1,11 +1,32 @@
-# ...
-apiVersion: v1
-kind: ConfigMap
+# ... after the ConfigMap section
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: cloudflared-config
+  name: cloudflared
   namespace: cloudflare-tunnel
-data:
-  # We no longer need the ingress block here.
-  # Cloudflare is handling it from the UI.
-  config.yaml: ""
-# ...
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      containers:
+        - name: cloudflared
+          image: cloudflare/cloudflared:latest
+          args:
+            - tunnel
+            - --no-autoupdate
+            - run
+            # --- PASTE YOUR TUNNEL ID HERE ---
+            - 96d8b0d2-c97b-4fef-ad5a-77f9908f2204
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-token
+                  key: token
+          # We no longer need to mount the configmap
