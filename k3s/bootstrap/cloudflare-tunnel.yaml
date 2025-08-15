@@ -1,73 +1,11 @@
-# k3s/bootstrap/cloudflare-tunnel.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: cloudflare-tunnel
----
-# This secret now only holds your token
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cloudflared-token
-  namespace: cloudflare-tunnel
-stringData:
-  # PASTE YOUR TUNNEL TOKEN HERE
-  token: "eyJhIjoiNWZjMzQxY2Y0OTA4NGQ4MjBhYTFjMGQ3YTQzM2NhNDkiLCJ0IjoiOTZkOGIwZDItYzk3Yi00ZmVmLWFkNWEtNzdmOTkwOGYyMjA0IiwicyI6Ik1USTBZbVV5TWpVdE5qYzNNUzAwTWpFNExUazFNV1V0WmprNVpEVXdZemc1TWpVNCJ9"
----
-# The configmap now only holds your ingress rules
+# ...
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cloudflared-config
   namespace: cloudflare-tunnel
 data:
-  config.yaml: |
-    ingress:
-      - hostname: argocd.rahl.cc
-        service: http://argocd-server.argocd.svc.cluster.local:80
-      - hostname: ceph.rahl.cc
-        service: http://rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local:7000 # Changed to http and port 7000
-      - service: http_status:404
----
-# The deployment is updated to use the token
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cloudflared
-  namespace: cloudflare-tunnel
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: cloudflared
-  template:
-    metadata:
-      labels:
-        app: cloudflared
-    spec:
-      containers:
-        - name: cloudflared
-          image: cloudflare/cloudflared:latest
-          args:
-            - tunnel
-            - --config
-            - /etc/cloudflared/config.yaml
-            - run
-          env:
-            - name: TUNNEL_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflared-token
-                  key: token
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/cloudflared/config.yaml
-              subPath: config.yaml
-      volumes:
-        - name: config-volume
-          configMap:
-            name: cloudflared-config
-
-
-
-#    {"AccountTag":"5fc341cf49084d820aa1c0d7a433ca49","TunnelID":"7uWjolu1kRJLhzcPZ0xumCIaaWHG2CG/7l9Lk06GC+s=","TunnelSecret":"c8d46551-f5f3-4d4d-a764d-a76a-a679df82c934"}
+  # We no longer need the ingress block here.
+  # Cloudflare is handling it from the UI.
+  config.yaml: ""
+# ...
