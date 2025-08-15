@@ -1,9 +1,42 @@
-# ... after the ConfigMap section
+# k3s/bootstrap/cloudflare-tunnel.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudflare-tunnel
+  # WAVE 0: Create the Namespace first
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflared-token
+  namespace: cloudflare-tunnel
+  # WAVE 1: Create the Secret next
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+stringData:
+  token: "YOUR_CORRECT_TUNNEL_TOKEN_HERE"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflared-config
+  namespace: cloudflare-tunnel
+  # WAVE 1: Create the ConfigMap at the same time as the Secret
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  config.yaml: ""
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cloudflared
   namespace: cloudflare-tunnel
+  # WAVE 2: Create the Deployment last, after its dependencies exist
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: 1
   selector:
@@ -21,12 +54,10 @@ spec:
             - tunnel
             - --no-autoupdate
             - run
-            # --- PASTE YOUR TUNNEL ID HERE ---
-            - 96d8b0d2-c97b-4fef-ad5a-77f9908f2204
+            - 96d8b0d2-c97b-4fef-ad5a-77f9908f2204 # Your k3_tunnel ID
           env:
             - name: TUNNEL_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: cloudflared-token
                   key: token
-          # We no longer need to mount the configmap
