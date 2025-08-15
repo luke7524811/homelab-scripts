@@ -12,7 +12,7 @@ metadata:
   namespace: cloudflare-tunnel
 stringData:
   # PASTE YOUR TUNNEL TOKEN HERE
-  token: "c8d46551-f5f3-4d4d-a76a-a679df82c934"
+  token: "38cb1089-f8dd-4080-b645-c9a908b980e6"
 ---
 # The configmap now only holds your ingress rules
 apiVersion: v1
