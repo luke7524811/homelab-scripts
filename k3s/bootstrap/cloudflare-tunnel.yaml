@@ -28,7 +28,7 @@ data:
         originRequest:
           noTLSVerify: true
       - hostname: ceph.rahl.cc
-        service: https://rook-ceph-mgr-dashboard-secure.rook-ceph.svc.cluster.local:8443
+        service: https://rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local:8443
         originRequest:
           noTLSVerify: true
       - service: http_status:404
