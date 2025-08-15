@@ -25,12 +25,8 @@ data:
     ingress:
       - hostname: argocd.rahl.cc
         service: http://argocd-server.argocd.svc.cluster.local:80
-        originRequest:
-          noTLSVerify: true
       - hostname: ceph.rahl.cc
-        service: https://rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local:8443
-        originRequest:
-          noTLSVerify: true
+        service: http://rook-ceph-mgr-dashboard.rook-ceph.svc.cluster.local:7000 # Changed to http and port 7000
       - service: http_status:404
 ---
 # The deployment is updated to use the token

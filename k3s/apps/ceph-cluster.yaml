@@ -17,7 +17,7 @@ spec:
     count: 1
   dashboard:
     enabled: true
-    ssl: true
+    ssl: false
   placement:
     all:
       tolerations:
