@@ -1,0 +1,69 @@
+# k3s/apps/actual-budget.yaml
+---
+# Persistent Volume Claim (PVC)
+# Requests a 2GiB volume from Ceph for your budget data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: actual-data-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 2Gi
+---
+# Deployment
+# Tells Kubernetes how to run the Actual Budget container.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: actual-budget
+  namespace: default
+  labels:
+    app: actual-budget
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: actual-budget
+  template:
+    metadata:
+      labels:
+        app: actual-budget
+    spec:
+      # This security context ensures the container runs as a non-root user
+      # for better security and can write to its storage volume.
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: actual-budget
+        image: actualbudget/actual-server:latest
+        ports:
+        - containerPort: 5006
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: actual-data-pvc
+---
+# Service
+# Gives the deployment a stable internal network address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: actual-budget
+  namespace: default
+spec:
+  selector:
+    app: actual-budget
+  ports:
+  - name: http
+    port: 5006
+    targetPort: 5006
