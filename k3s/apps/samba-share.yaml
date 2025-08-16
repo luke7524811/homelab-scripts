@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: samba
+  namespace: default
+spec:
+  type: NodePort # This service type exposes the port on the node's IP
+  selector:
+    app: samba
+  ports:
+    - name: smb
+      port: 445
+      targetPort: 445
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: samba
+  namespace: default
+  labels:
+    app: samba
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: samba
+  template:
+    metadata:
+      labels:
+        app: samba
+    spec:
+      containers:
+      - name: samba
+        image: dperson/samba
+        # These arguments create a user and share your media directory
+        args:
+          - "-u"
+          - "luke7524811;Tkasha-7524811-01" # CHANGE THESE VALUES
+          - "-s"
+          - "media;/media" # Share name;path
+        ports:
+        - containerPort: 445
+        volumeMounts:
+        # Mount your one big media drive so the share can access it
+        - name: media
+          mountPath: /media
+      volumes:
+      # This attaches your main media PVC
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
