@@ -1,0 +1,36 @@
+# k3s/apps/rclone-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: seedbox-sync-cronjob
+  namespace: default
+spec:
+  # This runs the job every day at 2:00 AM.
+  # Format: Minute Hour DayOfMonth Month DayOfWeek
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: rclone
+            image: rclone/rclone:latest
+            command:
+              - "rclone"
+              - "copy"
+              - "my-seedbox:"         # Source: The top-level of your seedbox
+              - "/data/audiobooks"    # Destination: An 'audiobooks' folder on your media drive
+              - "--progress"
+            volumeMounts:
+            - name: rclone-config
+              mountPath: "/config/rclone"
+            - name: media-data
+              mountPath: "/data"
+          volumes:
+          - name: rclone-config
+            secret:
+              secretName: rclone-config
+          - name: media-data
+            persistentVolumeClaim:
+              claimName: media-pvc
