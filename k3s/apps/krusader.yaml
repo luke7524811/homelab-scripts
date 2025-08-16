@@ -32,6 +32,8 @@ spec:
       labels:
         app: krusader
     spec:
+      imagePullSecrets:
+      - name: ghcr-creds
       containers:
       - name: krusader
         image: lscr.io/linuxserver/krusader:latest
