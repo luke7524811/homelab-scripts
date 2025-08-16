@@ -1,0 +1,75 @@
+# k3s/apps/jellyfin.yaml
+---
+# PVC for Jellyfin's configuration and metadata library
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 25Gi # Jellyfin's metadata can get large
+---
+# Deployment for the Jellyfin application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: default
+  labels:
+    app: jellyfin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+      - name: jellyfin
+        image: lscr.io/linuxserver/jellyfin:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        ports:
+        - containerPort: 8096
+        volumeMounts:
+        # Mount for Jellyfin's config and metadata
+        - name: config
+          mountPath: /config
+        # Mount your one big media drive to access your libraries
+        - name: media
+          mountPath: /media
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: jellyfin-config-pvc
+      # This attaches your main media PVC to the pod
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
+---
+# Service for internal networking
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin
+  namespace: default
+spec:
+  selector:
+    app: jellyfin
+  ports:
+  - name: http
+    port: 8096
+    targetPort: 8096
