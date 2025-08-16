@@ -1,0 +1,76 @@
+# k3s/apps/sonarr.yaml
+---
+# PVC for Sonarr's configuration and database
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Deployment for the Sonarr application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: default
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      containers:
+      - name: sonarr
+        image: lscr.io/linuxserver/sonarr:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        ports:
+        - containerPort: 8989
+        volumeMounts:
+        # Mount for Sonarr's config
+        - name: config
+          mountPath: /config
+        # Mount your one big media drive.
+        # Sonarr will access both downloads and the final tv library from here.
+        - name: media
+          mountPath: /media
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: sonarr-config-pvc
+      # This attaches your main media PVC to the pod
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
+---
+# Service for internal networking
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: default
+spec:
+  selector:
+    app: sonarr
+  ports:
+  - name: http
+    port: 8989
+    targetPort: 8989
