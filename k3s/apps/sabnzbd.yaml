@@ -42,7 +42,7 @@ spec:
           value: "1000"
         - name: TZ
           value: "America/Denver"
-        - name: SABNZBD__HOST_WHITELIST
+        - name: SABNZBD__MISC__HOST_WHITELIST
           value: "sabnzbd.rahl.cc"
         ports:
         - containerPort: 8080
