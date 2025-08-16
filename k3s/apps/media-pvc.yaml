@@ -1,0 +1,13 @@
+# k3s/apps/media-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 50Ti
