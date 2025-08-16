@@ -1,0 +1,32 @@
+# k3s/apps/rclone-sync-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seedbox-sync
+  namespace: default
+spec:
+  template:
+    spec:
+      restartPolicy: Never # Run only once
+      containers:
+      - name: rclone
+        image: rclone/rclone:latest
+        command:
+          - "rclone"
+          - "copy"
+          - "my-seedbox:"   # <-- EDIT THIS: Source on seedbox
+          - "/data/audiobooks"                  # <-- EDIT THIS: Destination in your media folder
+          - "--progress"
+        volumeMounts:
+        - name: rclone-config
+          mountPath: "/config/rclone"
+        - name: media-data
+          mountPath: "/data"
+      volumes:
+      - name: rclone-config
+        secret:
+          secretName: rclone-config
+      - name: media-data
+        persistentVolumeClaim:
+          claimName: media-pvc
+  backoffLimit: 1
