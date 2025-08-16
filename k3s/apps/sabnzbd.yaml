@@ -1,0 +1,75 @@
+# k3s/apps/sabnzbd.yaml
+---
+# PVC for SABnzbd's configuration
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sabnzbd-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Deployment for the SABnzbd application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sabnzbd
+  namespace: default
+  labels:
+    app: sabnzbd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sabnzbd
+  template:
+    metadata:
+      labels:
+        app: sabnzbd
+    spec:
+      containers:
+      - name: sabnzbd
+        image: lscr.io/linuxserver/sabnzbd:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        # Mount for SABnzbd's config
+        - name: config
+          mountPath: /config
+        # Mount your one big media drive for downloads
+        - name: downloads
+          mountPath: /downloads
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: sabnzbd-config-pvc
+      # This attaches your main media PVC to the pod
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: media-pvc
+---
+# Service for internal networking
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabnzbd
+  namespace: default
+spec:
+  selector:
+    app: sabnzbd
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
