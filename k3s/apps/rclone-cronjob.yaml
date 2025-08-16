@@ -18,11 +18,12 @@ spec:
             image: rclone/rclone:latest
             command:
               - "rclone"
-              - "copy"
+              - "move"
               - "my-seedbox:"         # Source: The top-level of your seedbox
               - "/data/audiobooks"    # Destination: An 'audiobooks' folder on your media drive
               - "--progress"
-            volumeMounts:
+              - "--ignore-existing"
+              volumeMounts:
             - name: rclone-config
               mountPath: "/config/rclone"
             - name: media-data
