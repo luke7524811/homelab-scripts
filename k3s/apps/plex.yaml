@@ -12,7 +12,23 @@ spec:
   storageClassName: ceph-fs-shared
   resources:
     requests:
-      storage: 50Gi # Plex metadata can get very large
+      storage: 50Gi
+---
+# Service to expose Plex on a port on every node
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: default
+spec:
+  type: NodePort # This is the key change
+  selector:
+    app: plex
+  ports:
+    - name: http-plex
+      port: 32400
+      targetPort: 32400
+      protocol: TCP
 ---
 # Deployment for the Plex application
 apiVersion: apps/v1
@@ -32,10 +48,7 @@ spec:
       labels:
         app: plex
     spec:
-      # This gives the Plex pod direct access to your home network
-      # for best discovery and streaming performance.
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      # We no longer need hostNetwork or dnsPolicy
       containers:
       - name: plex
         image: lscr.io/linuxserver/plex:latest
@@ -48,28 +61,23 @@ spec:
           value: "America/Denver"
         - name: VERSION
           value: "docker"
-        # --- PASTE YOUR PLEX CLAIM TOKEN HERE ---
         - name: PLEX_CLAIM
-          value: claim-Hg8yuJcorCnih-6StmRY
+          value: claim-6UZPD5xX1uVSrVEZCDxt
+        ports:
+        - containerPort: 32400
         volumeMounts:
-        # Mount for Plex's config and metadata
         - name: config
           mountPath: /config
-        # Mount a temporary, fast directory for video transcoding
         - name: transcode
           mountPath: /transcode
-        # Mount your one big media drive to access your libraries
         - name: media
           mountPath: /media
       volumes:
       - name: config
         persistentVolumeClaim:
           claimName: plex-config-pvc
-      # This attaches your main media PVC to the pod
       - name: media
         persistentVolumeClaim:
           claimName: media-pvc
-      # This creates a temporary volume on the node's fast local disk
-      # for transcoding, which is much faster than using Ceph for this.
       - name: transcode
         emptyDir: {}
