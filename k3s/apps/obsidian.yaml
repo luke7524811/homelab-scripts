@@ -1,0 +1,70 @@
+# k3s/apps/obsidian.yaml
+---
+# Persistent Volume Claim (PVC)
+# This requests a 10GiB volume from Ceph for your notes and config.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: obsidian-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Deployment
+# This tells Kubernetes how to run the Obsidian container.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: obsidian
+  namespace: default
+  labels:
+    app: obsidian
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: obsidian
+  template:
+    metadata:
+      labels:
+        app: obsidian
+    spec:
+      containers:
+      - name: obsidian
+        image: lscr.io/linuxserver/obsidian:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: obsidian-config-pvc
+---
+# Service
+# This gives the deployment a stable internal network address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: obsidian
+  namespace: default
+spec:
+  selector:
+    app: obsidian
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
