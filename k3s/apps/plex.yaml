@@ -1,0 +1,75 @@
+# k3s/apps/plex.yaml
+---
+# PVC for Plex's configuration and metadata library
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 50Gi # Plex metadata can get very large
+---
+# Deployment for the Plex application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: default
+  labels:
+    app: plex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      # This gives the Plex pod direct access to your home network
+      # for best discovery and streaming performance.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: plex
+        image: lscr.io/linuxserver/plex:latest
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        - name: VERSION
+          value: "docker"
+        # --- PASTE YOUR PLEX CLAIM TOKEN HERE ---
+        - name: PLEX_CLAIM
+          value: claim-Hg8yuJcorCnih-6StmRY
+        volumeMounts:
+        # Mount for Plex's config and metadata
+        - name: config
+          mountPath: /config
+        # Mount a temporary, fast directory for video transcoding
+        - name: transcode
+          mountPath: /transcode
+        # Mount your one big media drive to access your libraries
+        - name: media
+          mountPath: /media
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: plex-config-pvc
+      # This attaches your main media PVC to the pod
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
+      # This creates a temporary volume on the node's fast local disk
+      # for transcoding, which is much faster than using Ceph for this.
+      - name: transcode
+        emptyDir: {}
