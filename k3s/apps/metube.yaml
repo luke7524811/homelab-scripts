@@ -1,0 +1,75 @@
+# k3s/apps/metube.yaml
+---
+# PVC for MeTube's configuration
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: metube-config-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Deployment for the MeTube application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metube
+  namespace: default
+  labels:
+    app: metube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metube
+  template:
+    metadata:
+      labels:
+        app: metube
+    spec:
+      containers:
+      - name: metube
+        image: alexta69/metube
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "America/Denver"
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        # Mount for MeTube's config
+        - name: config
+          mountPath: /config
+        # Mount your one big media drive for the video downloads
+        - name: media
+          mountPath: /media
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: metube-config-pvc
+      # This attaches your main media PVC to the pod
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-pvc
+---
+# Service for internal networking
+apiVersion: v1
+kind: Service
+metadata:
+  name: metube
+  namespace: default
+spec:
+  selector:
+    app: metube
+  ports:
+  - name: http
+    port: 8081
+    targetPort: 8081
