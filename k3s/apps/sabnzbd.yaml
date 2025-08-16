@@ -43,7 +43,7 @@ spec:
         - name: TZ
           value: "America/Denver"
         - name: SABNZBD__MISC__HOST_WHITELIST
-          value: "sabnzbd.rahl.cc"
+          value: sabnzbd.rahl.cc,sabnzbd,sabnzbd.default.svc.cluster.local
         ports:
         - containerPort: 8080
         volumeMounts:
