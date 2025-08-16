@@ -1,0 +1,70 @@
+# k3s/apps/vaultwarden.yaml
+---
+# Persistent Volume Claim (PVC)
+# This requests a 5GiB "virtual hard drive" from Ceph for Vaultwarden's data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vaultwarden-data-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ceph-fs-shared
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Deployment
+# This tells Kubernetes how to run the Vaultwarden container.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultwarden
+  namespace: default
+  labels:
+    app: vaultwarden
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vaultwarden
+  template:
+    metadata:
+      labels:
+        app: vaultwarden
+    spec:
+      containers:
+      - name: vaultwarden
+        image: vaultwarden/server:latest
+        env:
+        - name: WEBSOCKET_ENABLED
+          value: "true"
+        # IMPORTANT: After you create your first account, uncomment the
+        # lines below and git push the change to secure your instance.
+        # - name: SIGNUPS_ALLOWED
+        #   value: "false"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: vaultwarden-data-pvc
+---
+# Service
+# This gives the deployment a stable internal network address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: default
+spec:
+  selector:
+    app: vaultwarden
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
